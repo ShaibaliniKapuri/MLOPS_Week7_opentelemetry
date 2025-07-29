@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Changed the service name for clarity
+  name: iris-classifier-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      # This label must match the service and template labels
+      app: iris-classifier-service
+  template:
+    metadata:
+      labels:
+        # Changed the label to match the new name
+        app: iris-classifier-service
+    spec:
+      serviceAccountName: telemetry-access
+      containers:
+      - name: iris-classifier-container
+        # IMPORTANT: Replace this with the path to your new Docker image
+        image: us-central1-docker.pkg.dev/assignment1-461404/my-repo/iris-classifier:latest
+        ports:
+        - containerPort: 8200
+        readinessProbe:
+          httpGet:
+            path: /ready_check
+            port: 8200
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /live_check
+            port: 8200
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi" # Increased memory slightly for ML libraries
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
